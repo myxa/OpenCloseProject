@@ -6,12 +6,12 @@ import pandas as pd
 
 class Dataset:
 
-    def __init__(self, sub_label: list, derivatives_path: str, runs: int,
+    def __init__(self, derivatives_path: str, runs: int,
                  task: str):
         """ 
         
         """
-        self.sub_labels = sub_label
+        #self.sub_labels = sub_label
         self.derivatives = Path(derivatives_path).as_posix()
         self.runs = runs # сколько 
         self.task = task
@@ -20,6 +20,10 @@ class Dataset:
     def bids_layout(self):
         return bids.BIDSLayout(
                 self.derivatives, validate=False, config=['bids','derivatives'])
+    
+    @property
+    def sub_labels(self):
+        return self.bids_layout.get_subjects()
     
 
     def get_confounds_one_subject(self, sub=None):

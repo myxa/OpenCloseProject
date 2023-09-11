@@ -61,8 +61,8 @@ class Denoising:
 
         if self.use_cosine is False:
             self.masker.set_params(high_pass=0.008,
-                                         low_pass=0.09, 
-                                         t_r=2.5)
+                                   low_pass=0.09, 
+                                   t_r=2.5)
             
         if self.smoothing is not None:
             self.masker.set_params(smoothing_fwhm=self.smoothing)
