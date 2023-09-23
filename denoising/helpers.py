@@ -42,5 +42,13 @@ def functional_connectivity(ts, measure="correlation"):
         if fc.shape[0] == 1:
             fc = np.squeeze(fc)
 
+    elif isinstance(ts, np.ndarray) and len(ts.shape) == 3:
+        fc = connectivity_measure.fit_transform(ts)
+        for i in fc:
+            np.fill_diagonal(i, 0)
+
+        if fc.shape[0] == 1:
+            fc = np.squeeze(fc)
+
     return fc
 

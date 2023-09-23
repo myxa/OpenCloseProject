@@ -78,9 +78,16 @@ class Denoising:
             sub = self.dataset.sub_labels
 
         denoised = []
+        failed_subs = []
         for s in tqdm(sub):
-            denoised.append(
-                self.denoise_one_sub(sub=s))
+            try:
+                denoised.append(
+                    self.denoise_one_sub(sub=s))
+            except ValueError:
+                failed_subs.append(s)
+                continue
+
+        print(f'failed to process: {failed_subs}')
         
         return denoised
     
@@ -119,4 +126,20 @@ class Denoising:
         df.to_csv(os.path.join(path_to_save, name), index=False)
 
         return df
+    
+    def fetch_timeseries(self, sub=None, atlas_name=None):
+        for i in range(self.dataset.runs):
+            name = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
+            for en, i in enumerate(subs):
+                try:
+                    run1[en] = pd.read_csv(
+                        os.path.join(ts_path, i, atlas_name, f'{i}_task-rest_run-1_time-series_{atlas_name}_strategy-4.csv')).values
+                    run2[en] = pd.read_csv(
+                        os.path.join(ts_path, i, atlas_name, f'{i}_task-rest_run-2_time-series_{atlas_name}_strategy-4.csv')).values
+                    run3[en] = pd.read_csv(
+                        os.path.join(ts_path, i, atlas_name, f'{i}_task-rest_run-3_time-series_{atlas_name}_strategy-4.csv')).values
+                except ValueError:
+                    print(i, en)
+                    continue
+
 
