@@ -8,7 +8,33 @@ from urllib.parse import urlencode
 
 
 class Atlas:
+    """
+    Class to handle atlas file
+
+    Attributes
+    ----------
+    atlas_name
+        Returns atlas name
+    atlas_path
+        Loads atlas and returns path to atlas file
+    atlas_labels
+        Returns ROI labels
+    masker
+        Returns time series extractor instance
+    """
+
     def __init__(self, atlas_name):
+        """
+        Parameters
+        ----------
+        atlas_name: str
+            One of ['HCPex', 'Schaefer200', 'AAL']
+        
+        Raise
+        -----
+        NotImplementedError
+            If unknown atlas name is provided
+        """
 
         if atlas_name not in ['HCPex', 'Schaefer200', 'AAL']:
             raise NotImplementedError('Available atlases: HCPex, Schaefer200, AAL')
@@ -26,11 +52,19 @@ class Atlas:
 
 
     def _load_atlas(self):
+        """
+        Loads atlas file from Yandex Disk
+
+        Returns
+        -------
+        path to loaded file
+        """
         base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
 
         if self.atlas_name == 'HCPex':
             public_key = 'https://disk.yandex.ru/d/mOmRumssnvS3Tw'
             fname = os.path.join('../atlas','HCPex.nii')
+
         elif self.atlas_name == 'Schaefer200':
             public_key = 'https://disk.yandex.ru/d/GGplzqDal5kYZg'
             fname = os.path.join('../atlas', 'Schaefer_7N_200.nii.gz')
@@ -42,7 +76,7 @@ class Atlas:
 
         # Загружаем файл и сохраняем его
         download_response = requests.get(download_url)
-        with open(fname, 'wb') as f:   # Здесь укажите нужный путь к файлу
+        with open(fname, 'wb') as f:
             f.write(download_response.content)
         
         return os.path.abspath(fname)
@@ -66,6 +100,7 @@ class Atlas:
             roi_labels = self.atlas['labels']
 
         return roi_labels
+
 
     @property
     def masker(self):

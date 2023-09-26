@@ -5,13 +5,36 @@ import pandas as pd
 
 
 class Dataset:
+    """
+    Class to handle fmriprep output
+
+    Attributes
+    ----------
+    bids_layout
+        Returns dataset layout
+    sub_labels
+        Returns a list of subject labels
+    
+    Methods
+    -------
+    get_func_files(sub)
+        Returns list of functional files paths
+
+    """
 
     def __init__(self, derivatives_path: str, runs: int,
                  task: str):
         """ 
-        
+        Parameters
+        ----------
+        derivatives_path: str
+            Path to derivatives directory
+        runs: int
+            Number of runs in one folder
+        task: str
+            Task name
         """
-        #self.sub_labels = sub_label
+
         self.derivatives = Path(derivatives_path).as_posix()
         self.runs = runs # сколько 
         self.task = task
@@ -26,7 +49,7 @@ class Dataset:
         return self.bids_layout.get_subjects()
     
 
-    def get_confounds_one_subject(self, sub=None):
+    def _get_confounds_one_subject(self, sub=None):
         conf_paths = self.bids_layout.get(subject=sub,
                                           extension='tsv',
                                           return_type='file')
@@ -34,6 +57,19 @@ class Dataset:
     
             
     def get_func_files(self, sub=None):
+        """
+        Get functional files' paths
+
+        Parameters
+        ----------
+        sub: list of str, optional
+            Subject labels to get files for. If None, all subjects are returned
+        
+        Returns
+        -------
+        list of str
+        """
+
         if sub is None:
             sub = self.sub_labels
         return self.bids_layout.get(subject=sub,
@@ -43,4 +79,5 @@ class Dataset:
                                     space='MNI152NLin2009cAsym',
                                     extension='nii.gz',
                                     return_type='file')
+    
         
