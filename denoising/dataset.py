@@ -49,7 +49,21 @@ class Dataset:
         return self.bids_layout.get_subjects()
     
 
-    def _get_confounds_one_subject(self, sub=None):
+    def get_confounds_one_subject(self, sub=None):
+        """
+        Get confounds dataframe
+
+        Parameters
+        ----------
+        sub: str
+            Subject label
+        
+        Returns
+        -------
+        list of pd.DataFrame
+            List with dataframes for each run for one subject
+        """
+
         conf_paths = self.bids_layout.get(subject=sub,
                                           extension='tsv',
                                           return_type='file')

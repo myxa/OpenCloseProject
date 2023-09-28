@@ -5,6 +5,21 @@ from nilearn.connectome import ConnectivityMeasure
 
 
 def reorder_matrix(matr, atlas_name):
+    """
+    Reorder FC matrix in Left-Right order
+    
+    Parameters
+    ----------
+    matr: np.array
+        Matrix to reorder
+    atlas_name: str
+        One of ['HCPex', 'Schaefer200']
+
+    Returns
+    -------
+    np.array
+        Reordered matrix (wow!)
+    """
     if atlas_name == 'HCPex':
         ids = np.loadtxt('../atlas/HCPex_id.txt', dtype=int) - 1
     elif atlas_name == 'Schaefer200':
@@ -23,9 +38,23 @@ def plot_corr_hist(ts1, ts2, title=''):
 
 
 def functional_connectivity(ts, measure="correlation"):
+    """
+    Functional connectivity calculation
+
+    Parameters
+    ----------
+    ts: list, np.array
+        List of np.arrays or np.array of shape (2, :, :) or (3, :, :)
+    measure: str
+        One of ["covariance", "correlation", "partial correlation", "tangent", "precision"]. By default "correlation"
+
+    Returns
+    -------
+    list of np.arrays
+    """
 
     connectivity_measure = ConnectivityMeasure(kind=measure)
-
+    # FIX list of arrays не работает
     fc = []
     if isinstance(ts[0], list):
         for l in ts:
