@@ -67,53 +67,56 @@ class Denoising:
         self.smoothing = smoothing
         self.n_compcor = 10 if n_compcor is None else n_compcor
 
-    
     @property
-    def strategy(self): 
+    def strategy(self):
         # 24P
         strategy_1 = {'strategy': ['motion'],
-                      'motion'  : 'full',
-                      }  
+                      'motion': 'full',
+                      }
         # compcor, 12p
-        strategy_2 = {'strategy' : ['motion', 'compcor', 'high_pass'],
-                      'motion'   : 'derivatives',
-                      'compcor'  : 'anat_combined',
+        strategy_2 = {'strategy': ['motion', 'compcor', 'high_pass'],
+                      'motion': 'derivatives',
+                      'compcor': 'anat_combined',
                       'n_compcor': self.n_compcor}
         # compcor50, 12p
-        strategy_3 = {'strategy' : ['motion', 'compcor', 'high_pass'],
-                      'motion'   : 'derivatives',
-                      'compcor'  : 'anat_combined',
-                      'n_compcor': 'all'} 
+        strategy_3 = {'strategy': ['motion', 'compcor', 'high_pass'],
+                      'motion': 'derivatives',
+                      'compcor': 'anat_combined',
+                      'n_compcor': 'all'}
         # compcor, 24p
-        strategy_4 = {'strategy' : ['motion', 'compcor', 'high_pass'],
-                      'motion'   : 'full',
-                      'compcor'  : 'anat_combined',
+        strategy_4 = {'strategy': ['motion', 'compcor', 'high_pass'],
+                      'motion': 'full',
+                      'compcor': 'anat_combined',
                       'n_compcor': self.n_compcor}
         # compcor50, 24p
-        strategy_5 = {'strategy' : ['motion', 'compcor', 'high_pass'],
-                      'motion'   : 'full',
-                      'compcor'  : 'anat_combined',
+        strategy_5 = {'strategy': ['motion', 'compcor', 'high_pass'],
+                      'motion': 'full',
+                      'compcor': 'anat_combined',
                       'n_compcor': 'all'}
 
-        strategy = [strategy_1, strategy_2, strategy_3, strategy_4, strategy_5][self.int_strategy-1]
+        strategy_6 = {'strategy': ['motion', 'compcor', 'high_pass'],
+                      'motion': 'full',
+                      'compcor': 'temporal_anat_combined',
+                      'n_compcor': 'all'}
+
+        strategy = [strategy_1, strategy_2, strategy_3,
+                    strategy_4, strategy_5, strategy_6][self.int_strategy-1]
 
         if self.use_GSR:
             strategy['strategy'].append('global_signal')
-            strategy['global_signal'] = 'full' # 4p
-
+            strategy['global_signal'] = 'full'  # 4p
 
         if self.use_cosine is False:
             self.masker.set_params(high_pass=0.008,
-                                   low_pass=0.09, 
+                                   low_pass=0.09,
                                    t_r=2.5)
-            
+
         if self.smoothing is not None:
             self.masker.set_params(smoothing_fwhm=self.smoothing)
-            
+
         return strategy
 
-    
-    def denoise(self, sub=None):
+    def denoise(self, sub=None, save_outputs=True):
         """ 
         Denoising process
 
@@ -139,17 +142,17 @@ class Denoising:
         for s in tqdm(sub):
             try:
                 denoised.append(
-                    self._denoise_one_sub(sub=s))
+                    self._denoise_one_sub(sub=s, save_outputs=save_outputs))
             except ValueError:
                 failed_subs.append(s)
                 continue
 
-        print(f'failed to process: {failed_subs}')
-        
-        return denoised
-    
+        if failed_subs:
+            print(f'failed to process: {failed_subs}')
 
-    def _denoise_one_sub(self, sub):
+        return denoised
+
+    def _denoise_one_sub(self, sub, save_outputs):
         """
         Process and save one subject
 
@@ -173,8 +176,9 @@ class Denoising:
         for i in range(self.dataset.runs):
 
             if self.use_cosine is False:
-                # delete cosines from confounds df if we use bandpass filter 
-                confounds[i].loc[:, ~confounds[i].columns.str.startswith('cosine')]
+                # delete cosines from confounds df if we use bandpass filter
+                confounds[i].loc[:, ~
+                                 confounds[i].columns.str.startswith('cosine')]
 
             d = self.masker.fit_transform(imgs[i], confounds=confounds[i])
 
@@ -182,10 +186,11 @@ class Denoising:
             d = np.squeeze(d)
 
             denoised_ts.append(d)
-            _ = self._save_outputs(d, sub, run=i)
+
+            if save_outputs:
+                _ = self._save_outputs(d, sub, run=i)
 
         return denoised_ts
-
 
     def _save_outputs(self, outputs, sub, run):
         """
@@ -206,7 +211,7 @@ class Denoising:
             DataFrame where column names are roi labels
         """
 
-        path_to_save = os.path.join(self.dataset.derivatives, f'sub-{sub}', 
+        path_to_save = os.path.join(self.dataset.derivatives, f'sub-{sub}',
                                     'time-series', self.atlas.atlas_name)
         if not os.path.exists(path_to_save):
             os.makedirs(path_to_save)
@@ -217,9 +222,9 @@ class Denoising:
         df.to_csv(os.path.join(path_to_save, name), index=False)
 
         return df
-    
-    
+
     def fetch_timeseries(self, run, sub=None):
+        # TODO
         """
         Fetch processed time-series one run
 
@@ -242,10 +247,8 @@ class Denoising:
         ts = []
         for i in sub:
             name = f'sub-{i}_task-{self.dataset.task}_run-{run}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
-            path = os.path.join(self.dataset.derivatives, f'sub-{i}', 'time-series', self.atlas.atlas_name, name)
+            path = os.path.join(
+                self.dataset.derivatives, f'sub-{i}', 'time-series', self.atlas.atlas_name, name)
             ts.append(pd.read_csv(path).values)
 
         return ts
-
-
-

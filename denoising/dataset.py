@@ -36,18 +36,11 @@ class Dataset:
         """
 
         self.derivatives = Path(derivatives_path).as_posix()
-        self.runs = runs # сколько 
+        self.runs = runs
         self.task = task
-
-    @property
-    def bids_layout(self):
-        return bids.BIDSLayout(
-                self.derivatives, validate=False, config=['bids','derivatives'])
-    
-    @property
-    def sub_labels(self):
-        return self.bids_layout.get_subjects()
-    
+        self.bids_layout = bids.BIDSLayout(
+            self.derivatives, validate=False, config=['bids', 'derivatives'])
+        self.sub_labels = self.bids_layout.get_subjects()
 
     def get_confounds_one_subject(self, sub=None):
         """
@@ -68,8 +61,7 @@ class Dataset:
                                           extension='tsv',
                                           return_type='file')
         return [pd.read_csv(conf_paths[i], sep='\t') for i in range(self.runs)]
-    
-            
+
     def get_func_files(self, sub=None):
         """
         Get functional files' paths
@@ -87,11 +79,9 @@ class Dataset:
         if sub is None:
             sub = self.sub_labels
         return self.bids_layout.get(subject=sub,
-                                    datatype='func', 
+                                    datatype='func',
                                     task=self.task,
                                     desc='preproc',
                                     space='MNI152NLin2009cAsym',
                                     extension='nii.gz',
                                     return_type='file')
-    
-        

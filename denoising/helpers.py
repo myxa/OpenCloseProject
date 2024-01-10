@@ -26,8 +26,16 @@ def reorder_matrix(matr, atlas_name):
     elif atlas_name == 'Schaefer200':
         ids = np.loadtxt('../atlas/schaefer200_id.txt', dtype=int) - 1
 
-    sort_0 = matr[ids]
-    return sort_0.T[ids]
+    if isinstance(matr, np.ndarray) and len(matr.shape) == 3:
+        sort_0 = np.zeros_like(matr)
+        for i in range(len(matr)):
+            temp = matr[i][ids]
+            sort_0[i] = temp.T[ids]
+    else:
+        sort_0 = matr[ids]
+        sort_0 = sort_0.T[ids]
+
+    return sort_0
 
 
 def plot_corr_hist(ts1, ts2, title=''):
@@ -51,11 +59,10 @@ def functional_connectivity(ts, measure="correlation"):
 
     Returns
     -------
-    list of np.arrays
+    list of np.arrays or np.array
     """
 
     connectivity_measure = ConnectivityMeasure(kind=measure)
-    # FIX list of arrays не работает
     fc = []
     if isinstance(ts[0], list):
         for l in ts:
@@ -64,7 +71,7 @@ def functional_connectivity(ts, measure="correlation"):
                 np.fill_diagonal(i, 0)
             fc.append(calc)
 
-    elif isinstance(ts, np.ndarray) and len(ts.shape) == 2:
+    elif (isinstance(ts, np.ndarray) and len(ts.shape) == 2):
         fc = connectivity_measure.fit_transform([ts])
         for i in fc:
             np.fill_diagonal(i, 0)
@@ -79,6 +86,12 @@ def functional_connectivity(ts, measure="correlation"):
 
         if fc.shape[0] == 1:
             fc = np.squeeze(fc)
+
+    elif isinstance(ts, list):
+        fc = connectivity_measure.fit_transform(ts)
+        for i in fc:
+            np.fill_diagonal(i, 0)
+
 
     return fc
 
