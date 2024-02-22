@@ -116,7 +116,7 @@ class Denoising:
 
         return strategy
 
-    def denoise(self, sub=None, save_outputs=True):
+    def denoise(self, sub=None, save_outputs=True, folder=None):
         """ 
         Denoising process
 
@@ -124,6 +124,12 @@ class Denoising:
         ----------
         sub: list of str, optional
             List of subject labels to process if provided. Otherwise all subjects in the datased are processed (None by default)
+        
+        save_outputs: bool, optional
+            whether to save outputs as csv files (True by default)
+        
+        folder: str or None, optional
+            path to folder (otherwise outputs will be saved in derivatives path)
 
         Returns
         -------
@@ -142,7 +148,7 @@ class Denoising:
         for s in tqdm(sub):
             try:
                 denoised.append(
-                    self._denoise_one_sub(sub=s, save_outputs=save_outputs))
+                    self._denoise_one_sub(sub=s, save_outputs=save_outputs, folder=folder))
             except ValueError:
                 failed_subs.append(s)
                 continue
@@ -152,7 +158,7 @@ class Denoising:
 
         return denoised
 
-    def _denoise_one_sub(self, sub, save_outputs):
+    def _denoise_one_sub(self, sub, save_outputs, folder):
         """
         Process and save one subject
 
@@ -168,18 +174,19 @@ class Denoising:
         """
 
         imgs = self.dataset.get_func_files(sub=sub)
+        masks = self.dataset.get_mask_files(sub=sub)
         assert len(imgs) == self.dataset.runs, "All runs should be in one folder"
 
         confounds, _ = load_confounds(imgs, **self.strategy)
         denoised_ts = []
+        
 
         for i in range(self.dataset.runs):
 
             if self.use_cosine is False:
                 # delete cosines from confounds df if we use bandpass filter
-                confounds[i].loc[:, ~
-                                 confounds[i].columns.str.startswith('cosine')]
-
+                confounds[i].loc[:, ~confounds[i].columns.str.startswith('cosine')]
+            self.masker.set_params(mask_img=masks[i])
             d = self.masker.fit_transform(imgs[i], confounds=confounds[i])
 
             # for one subject d.shape is (1, :, :)
@@ -188,11 +195,11 @@ class Denoising:
             denoised_ts.append(d)
 
             if save_outputs:
-                _ = self._save_outputs(d, sub, run=i)
+                _ = self._save_outputs(d, sub, run=i, folder=folder)
 
-        return denoised_ts
+        return denoised_ts#, d
 
-    def _save_outputs(self, outputs, sub, run):
+    def _save_outputs(self, outputs, sub, run, folder=None):
         """
         Saves processed time-series as csv files for every run
 
@@ -210,12 +217,15 @@ class Denoising:
         pd.DataFrame
             DataFrame where column names are roi labels
         """
+        if folder is None:
+            folder = self.dataset.derivatives
 
-        path_to_save = os.path.join(self.dataset.derivatives, f'sub-{sub}',
+        path_to_save = os.path.join(folder, f'sub-{sub}',
                                     'time-series', self.atlas.atlas_name)
+        
         if not os.path.exists(path_to_save):
             os.makedirs(path_to_save)
-
+        # TODO добавить в название файла GSR и smoothing
         name = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
 
         df = pd.DataFrame(outputs, columns=self.atlas.atlas_labels)

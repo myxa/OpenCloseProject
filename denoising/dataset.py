@@ -85,3 +85,27 @@ class Dataset:
                                     space='MNI152NLin2009cAsym',
                                     extension='nii.gz',
                                     return_type='file')
+    
+    def get_mask_files(self, sub=None):
+        """
+        Get functional files' paths
+
+        Parameters
+        ----------
+        sub: list of str, optional
+            Subject labels to get files for. If None, all subjects are returned
+        
+        Returns
+        -------
+        list of str
+        """
+
+        if sub is None:
+            sub = self.sub_labels
+        return self.bids_layout.get(subject=sub,
+                                    datatype='func',
+                                    task=self.task,
+                                    desc='brain',
+                                    space='MNI152NLin2009cAsym',
+                                    extension='nii.gz',
+                                    return_type='file')

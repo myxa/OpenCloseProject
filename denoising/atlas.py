@@ -94,9 +94,9 @@ class Atlas:
     def atlas_labels(self):
 
         if self.atlas_name == 'HCPex':
-            roi = pd.read_excel(os.path.join(self.atlas_labels_path, 'HCPex_sorted_networks_names.xlsx'),
-                                index_col='Index')
-            roi_labels = roi.sort_values(by='ID').Label.values
+            roi = pd.read_excel(os.path.join(self.atlas_labels_path, 'HCPex_sorted.xlsx'),
+                                index_col='NEW_ID')
+            roi_labels = roi.sort_values(by='HCPex_ID').Label.values
 
         elif self.atlas_name == 'Schaefer200':
             roi_labels = self.atlas['labels']
@@ -117,8 +117,9 @@ class Atlas:
                                  labels=self.atlas_labels,
                                  memory="nilearn_cache",
                                  verbose=1,
-                                 standardize='zscore_sample',
+                                 standardize=False, #'zscore_sample',
                                  detrend=True,
-                                 resampling_target='labels'
+                                 resampling_target='data', #'labels'
+                                 n_jobs=32
                                  )
         return mask
