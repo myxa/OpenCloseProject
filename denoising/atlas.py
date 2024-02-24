@@ -72,8 +72,8 @@ class Atlas:
             fname = os.path.join('../atlas', 'HCPex.nii.gz')
 
         elif self.atlas_name == 'Brainnetome':
-            public_key = 'https://disk.yandex.ru/d/xQQaUOhgP7oetA'
-            fname = os.path.join('../atlas', 'BN_Atlas_246_1mm.nii.gz')
+            public_key = 'https://disk.yandex.ru/d/Fo2j_VPpS7xWiA'
+            fname = os.path.join('../atlas', 'BN_Atlas_246_2mm.nii.gz')
 
         if os.path.exists(fname):
             return fname
@@ -105,7 +105,7 @@ class Atlas:
             roi_labels = self.atlas['labels']
 
         elif self.atlas_name == 'Brainnetome':
-            roi = pd.read_csv('../atlas/BN_Atlas_246_LUT.txt',
+            roi = pd.read_csv(os.path.join(self.atlas_labels_path, 'BN_Atlas_246_LUT.txt'),
                               index_col=0, sep=' ')
             roi_labels = roi.Unknown.values
 
