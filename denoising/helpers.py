@@ -135,3 +135,14 @@ def load_timeseries(path, sub=None, run=1, task='rest', strategy=4, atlas_name='
             continue
     print('no files available:', failed)
     return ts
+
+def mean_fd(sub, run, data):
+    return np.mean(data.get_confounds_one_subject(sub)[run-1]['framewise_displacement'][1:])
+
+def qc_fc(fc, run, mean_fd_vec):
+    qc_mat = np.zeros((fc.shape[1], fc.shape[2]))
+    for i in range(fc.shape[1]):
+        for t in range(fc.shape[2]):
+            qc_mat[i, t] = np.corrcoef(fc[:, i, t], mean_fd_vec[run-1])[0, 1]
+    return qc_mat
+
