@@ -62,7 +62,7 @@ def functional_connectivity(ts, measure="correlation"):
     list of np.arrays or np.array
     """
 
-    connectivity_measure = ConnectivityMeasure(kind=measure)
+    connectivity_measure = ConnectivityMeasure(kind=measure, standardize=False)
     fc = []
     if isinstance(ts[0], list):
         for l in ts:
@@ -135,6 +135,55 @@ def load_timeseries(path, sub=None, run=1, task='rest', strategy=4, atlas_name='
             continue
     print('no files available:', failed)
     return ts
+
+
+def fetch_ts(path, sub=None, run=1, task='rest', strategy=4, atlas_name='AAL'):
+    """
+    Load time series from folder.
+    Time-series should be stored in a folder for each subject. In subject folders there should be folder for atlas.
+    In atlas folder there are csv files
+
+    Parameters
+    ----------
+    path: str
+        Path to folder with all subject folders
+    sub: list of str, optional
+        List of subjects to load data in form 'sub-n'. If None, all subjects are loaded (default None)
+    run: int
+        Run to load
+    task: str
+        Task to load
+    strategy: int
+        Strategy to load
+    atlas_name: str
+        Atlas name. Should be one of ['HCPex', 'Schaefer200', 'AAL']
+    
+    Returns
+    -------
+    List of numpy.arrays 
+    """
+        
+    ts = []
+    if sub is None:
+        sub = os.listdir(path)
+    failed = []
+    for i in sub:
+        if not isinstance(i, str):
+            i = str(i)
+        if 'sub' in i:
+            i = i[4:]
+        try:
+            name = f'sub-{i}_task-{task}_run-{run}_time-series_{atlas_name}_strategy-{strategy}.csv'
+            path_to_file = os.path.join(path, f'sub-{i}', 'time-series', atlas_name, name)
+            #print(path_to_file)
+            ts.append(pd.read_csv(path_to_file).values)
+        except FileNotFoundError:
+            failed.append(i)
+            continue
+    print('no files available:', failed)
+    return ts
+
+
 
 def mean_fd(sub, run, data):
     return np.mean(data.get_confounds_one_subject(sub)[run-1]['framewise_displacement'][1:])
