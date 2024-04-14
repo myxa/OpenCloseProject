@@ -3,7 +3,7 @@ from typing import List
 from numpy.typing import NDArray
 
 
-class Metrics:
+class ICC:
     def __init__(self, data: List[NDArray], mask_file=None):
         """
         Class to calculate ICC and BSS.
@@ -69,21 +69,21 @@ class Metrics:
                 (self._bms() + (self.n_ses - 1) * self._wms()))
     
 
-    def bss(self, a: List) -> float:
-        """
-        BSS calculation
 
-        parameters
-        ----------
-        a: list
-            data of two sessions
-            
-        returns
-        -------
-        array of BSS for every subject
-        """
-        ans = np.zeros(self.n_sub)
-        for i in range(self.n_sub):
-            ans[i] = np.corrcoef(a[0][i], a[1][i])[0, 1]
-        return ans
-    
+def bss(a: List) -> float:
+    """
+    BSS calculation
+
+    parameters
+    ----------
+    a: list
+        data of two sessions
+        
+    returns
+    -------
+    array of BSS for every subject
+    """
+    ans = np.zeros(len(a[0]))
+    for i in range(len(a[0])):
+        ans[i] = np.corrcoef(a[0][i], a[1][i])[0, 1]
+    return ans
