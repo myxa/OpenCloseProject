@@ -109,7 +109,7 @@ class Denoising:
         if self.use_cosine is False:
             self.masker.set_params(high_pass=0.008,
                                    low_pass=0.09,
-                                   t_r=2.5)
+                                   t_r=self.dataset.t_r)
 
         if self.smoothing is not None:
             self.masker.set_params(smoothing_fwhm=self.smoothing)
@@ -152,6 +152,9 @@ class Denoising:
             except ValueError:
                 failed_subs.append(s)
                 continue
+            except IndexError:
+                failed_subs.append(s)
+                continue
 
         if failed_subs:
             print(f'failed to process: {failed_subs}')
@@ -175,17 +178,22 @@ class Denoising:
 
         imgs = self.dataset.get_func_files(sub=sub)
         masks = self.dataset.get_mask_files(sub=sub)
-        assert len(imgs) == self.dataset.runs, "All runs should be in one folder"
+        #print(len(masks), 'mask')
+        #assert len(imgs) == self.dataset.runs, "All runs should be in one folder"
 
         confounds, _ = load_confounds(imgs, **self.strategy)
         denoised_ts = []
-        
 
-        for i in range(self.dataset.runs):
+        #runs = self.dataset.runs
+        #sessions = 1 if self.dataset.sessions is None else self.dataset.sessions
+        
+        for i in range(len(imgs)):
 
             if self.use_cosine is False:
                 # delete cosines from confounds df if we use bandpass filter
                 confounds[i].loc[:, ~confounds[i].columns.str.startswith('cosine')]
+            #print(i)
+            
             self.masker.set_params(mask_img=masks[i])
             d = self.masker.fit_transform(imgs[i], confounds=confounds[i])
 
@@ -194,7 +202,7 @@ class Denoising:
 
             denoised_ts.append(d)
 
-            if save_outputs:
+            if save_outputs: # fix run and session in name
                 _ = self._save_outputs(d, sub, run=i, folder=folder)
 
         return denoised_ts#, d

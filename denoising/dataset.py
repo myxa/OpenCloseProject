@@ -22,8 +22,8 @@ class Dataset:
 
     """
 
-    def __init__(self, derivatives_path: str, runs: int,
-                 task: str):
+    def __init__(self, derivatives_path: str, TR: float,
+                 sessions: int, runs: int, task: str):
         """ 
         Parameters
         ----------
@@ -37,7 +37,9 @@ class Dataset:
 
         self.derivatives = Path(derivatives_path).as_posix()
         self.runs = runs
+        self.sessions = sessions
         self.task = task
+        self.t_r = TR
         self.bids_layout = bids.BIDSLayout(
             self.derivatives, validate=False, config=['bids', 'derivatives'])
         self.sub_labels = self.bids_layout.get_subjects()
@@ -56,11 +58,11 @@ class Dataset:
         list of pd.DataFrame
             List with dataframes for each run for one subject
         """
-
         conf_paths = self.bids_layout.get(subject=sub,
                                           extension='tsv',
                                           return_type='file')
-        return [pd.read_csv(conf_paths[i], sep='\t') for i in range(self.runs)]
+        #print(len(conf_paths))
+        return [pd.read_csv(conf_paths[i], sep='\t') for i in range(len(conf_paths))]
 
     def get_func_files(self, sub=None):
         """

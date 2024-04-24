@@ -1,0 +1,15 @@
+notebooks/nilearn_cache
+nilearn_cache
+nilearn_env
+.vscode
+notebooks/outputs
+notebooks/outputs_china
+notebooks/TRT_outputs
+nohup.out
+denoising/__pycache__
+atlas/aal_SPM12
+atlas/schaefer_2018
+test_xcp
+files
+*.nii.gz
+/lasso_outputs

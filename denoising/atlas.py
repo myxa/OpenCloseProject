@@ -95,8 +95,13 @@ class Atlas:
 
         if self.atlas_name == 'HCPex':
             roi = pd.read_excel(os.path.join(self.atlas_labels_path, 'HCPex_sorted.xlsx'),
-                                index_col='NEW_ID')
-            roi_labels = roi.sort_values(by='HCPex_ID').Label.values
+                                index_col='HCPex_ID')
+            #roi_labels = roi.index.values
+            #roi_labels = roi.sort_values(by='HCPex_ID').index.values
+            #roi_labels = roi.drop([401, 365, 398], axis=0).index.values
+            #roi_labels = roi.drop([396, 365, 401, 372, 405], axis=0).index.values
+            roi.sort_index(inplace=True)
+            roi_labels = roi.drop([401, 372, 405], axis=0).Short_label.values
 
         elif self.atlas_name == 'Schaefer200':
             roi_labels = self.atlas['labels']
@@ -116,10 +121,10 @@ class Atlas:
         mask = NiftiLabelsMasker(labels_img=self.atlas_path,
                                  labels=self.atlas_labels,
                                  memory="nilearn_cache",
-                                 verbose=1,
+                                 verbose=-1,
                                  standardize=False, #'zscore_sample',
                                  detrend=True,
                                  resampling_target='data', #'labels'
-                                 n_jobs=32
+                                 n_jobs=-1 # fix 
                                  )
         return mask
