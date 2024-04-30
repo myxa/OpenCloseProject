@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 
 class ICC:
-    def __init__(self, data: List[NDArray], mask_file=None):
+    def __init__(self, data: List[NDArray], use_mask=False, mask_file=None):
         """
         Class to calculate ICC and BSS.
 
@@ -20,19 +20,25 @@ class ICC:
         """
         self.n_ses = len(data)
         self.n_sub = len(data[0])
+        self.data = data
 
-        self.thrsh = 0.2
+        if use_mask:
+            
+            self.thrsh = 0
 
-        if mask_file is None:
-            mask = [d > self.thrsh for d in data]
-            self.data = [data[i][mask[i]] for i in range(self.n_ses)]
-        else:
-            self.mask = [np.array([mask_file for _ in range(self.n_sub)]) for _ in range(self.n_ses)]
-            self.data = [data[i][mask[i]] for i in range(self.n_ses)]
+            if mask_file is None:
+                self.mask = [np.array(d > self.thrsh) for d in data] # 2
+                self.data = [data[i] * self.mask[i] for i in range(self.n_ses)] # 2
+
+                # len(self.data) = 2
+                # self.data[0].shape = (n_sub, roi, roi)
+            else:
+                self.mask = [np.array([mask_file for _ in range(self.n_sub)]) for _ in range(self.n_ses)]
+                self.data = [data[i] * self.mask[i] for i in range(self.n_ses)]
 
 
     @property
-    def _avg_vec(self):
+    def _avg_matr(self):
         return np.mean(
             np.concatenate(self.data), axis=0)
     
@@ -44,10 +50,10 @@ class ICC:
 
         """
         # group vecs by subject
-        sub_vec = [[self.data[ses][sub] for ses in range(self.n_ses)] for sub in range(self.n_sub)]
+        sub_vec = [[self.data[ses][sub] for ses in range(self.n_ses)] for sub in range(self.n_sub)] # list(list*2)*47
         
-        return np.sum([(self._avg_vec - 
-                        np.mean(sub_vec[sub], axis=0)) **2 for sub in range(self.n_sub)]) * self.n_ses
+        return np.sum([(self._avg_matr - 
+                        np.mean(sub_vec[sub], axis=0)) **2 for sub in range(self.n_sub)], axis=0) * self.n_ses
 
 
     def _wms(self) -> float:
@@ -56,8 +62,8 @@ class ICC:
         the average session value subtracted from overall avg of values
 
         """
-        return np.sum([(self._avg_vec - 
-                        np.mean(self.data[ses], axis=0)) **2 for ses in range(self.n_ses)]) * self.n_sub
+        return np.sum([(self._avg_matr - 
+                        np.mean(self.data[ses], axis=0)) **2 for ses in range(self.n_ses)], axis=0) * self.n_sub
 
 
     def icc(self) -> float:
@@ -65,8 +71,12 @@ class ICC:
         icc metric
 
         """
-        return ((self._bms() - self._wms()) / 
-                (self._bms() + (self.n_ses - 1) * self._wms()))
+        bms = self._bms()
+        wms = self._wms()
+        #print(np.mean(bms), np.mean(wms))
+        icc =  ((bms - wms) / 
+                (1e-09 + bms + (self.n_ses - 1) * wms))
+        return icc
     
 
 
