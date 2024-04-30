@@ -23,7 +23,7 @@ class Atlas:
         Returns time series extractor instance
     """
 
-    def __init__(self, atlas_name):
+    def __init__(self, atlas_name, mean_mask=None):
         """
         Parameters
         ----------
@@ -42,6 +42,7 @@ class Atlas:
 
         self.atlas_name = atlas_name
         self.atlas_labels_path = Path('../atlas/')
+        self.mask = mean_mask
 
     @property
     def atlas_path(self):
@@ -100,8 +101,8 @@ class Atlas:
             #roi_labels = roi.sort_values(by='HCPex_ID').index.values
             #roi_labels = roi.drop([401, 365, 398], axis=0).index.values
             #roi_labels = roi.drop([396, 365, 401, 372, 405], axis=0).index.values
-            roi.sort_index(inplace=True)
-            roi_labels = roi.drop([401, 372, 405], axis=0).Short_label.values
+            roi_labels = roi.sort_index()
+            #roi_labels = roi.drop([401, 372, 405], axis=0).Short_label.values
 
         elif self.atlas_name == 'Schaefer200':
             roi_labels = self.atlas['labels']
@@ -120,6 +121,7 @@ class Atlas:
     def masker(self):
         mask = NiftiLabelsMasker(labels_img=self.atlas_path,
                                  labels=self.atlas_labels,
+                                 mask_img=self.mask,
                                  memory="nilearn_cache",
                                  verbose=-1,
                                  standardize=False, #'zscore_sample',

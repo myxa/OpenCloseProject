@@ -177,7 +177,8 @@ class Denoising:
         """
 
         imgs = self.dataset.get_func_files(sub=sub)
-        masks = self.dataset.get_mask_files(sub=sub)
+        #masks = self.dataset.get_mask_files(sub=sub)
+        #mask = 
         #print(len(masks), 'mask')
         #assert len(imgs) == self.dataset.runs, "All runs should be in one folder"
 
@@ -194,7 +195,7 @@ class Denoising:
                 confounds[i].loc[:, ~confounds[i].columns.str.startswith('cosine')]
             #print(i)
             
-            self.masker.set_params(mask_img=masks[i])
+            #self.masker.set_params(mask_img=masks[i])
             d = self.masker.fit_transform(imgs[i], confounds=confounds[i])
 
             # for one subject d.shape is (1, :, :)
@@ -233,10 +234,11 @@ class Denoising:
         
         if not os.path.exists(path_to_save):
             os.makedirs(path_to_save)
+            
         # TODO добавить в название файла GSR и smoothing
         name = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
 
-        df = pd.DataFrame(outputs, columns=self.atlas.atlas_labels)
+        df = pd.DataFrame(outputs)
         df.to_csv(os.path.join(path_to_save, name), index=False)
 
         return df
