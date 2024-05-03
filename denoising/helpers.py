@@ -70,6 +70,7 @@ def functional_connectivity(ts, measure="correlation"):
             for i in calc:
                 np.fill_diagonal(i, 0)
             fc.append(calc)
+        fc = np.array(fc)
 
     elif (isinstance(ts, np.ndarray) and len(ts.shape) == 2):
         fc = connectivity_measure.fit_transform([ts])
