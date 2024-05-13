@@ -104,3 +104,38 @@ def glasso(data, is_scaled=False, L1=0.001):
         outp[i] = glassoParCorr
 
     return outp
+
+def glasso_ms(data, is_scaled=False, L1=0.001):
+    """
+    Calculates the L1-regularized partial correlation matrix of a dataset. 
+
+    INPUT:
+        data : a dataset with dimension [nNodes x nDatapoints]
+        L1 : L1 (lambda1) hyperparameter value
+    OUTPUT:
+        glassoParCorr : regularized partial correlation coefficients (i.e., FC matrix)
+        prec : precision matrix, where entries are not yet transformed into partial correlations (used to compute loglikelihood)
+    """
+
+    data = np.transpose(data, (0, 2, 1))
+    if not is_scaled:
+        data_scaled = stats.zscore(data, axis=1)
+
+    outp = []
+    
+    for i in range(5, 15):
+        empCov = np.cov(data_scaled[i], rowvar=True)
+
+        glasso = glasso_problem(empCov, data.shape[1], 
+                                reg_params={'lambda1': L1}, 
+                                latent=False, do_scaling=False)
+        
+        L1s = np.arange(-.5, -3.1, -.2)
+        L1s = np.round(10 **L1s, 6)
+        modelselect_params = {'lambda1_range': L1s}
+        glasso.model_selection(modelselect_params=modelselect_params)
+        
+        outp.append(glasso.reg_params['lambda1'])
+
+
+    return outp
