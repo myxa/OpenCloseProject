@@ -85,7 +85,46 @@ def functional_connectivity(ts, measure="correlation"):
     elif isinstance(ts, list):
         fc = connectivity_measure.fit_transform(ts)
         for i in fc:
-            np.fill_diagonal(i, 1)
+            np.fill_diagonal(i, 0)
+
+    return fc   
 
 
-    return fc
+def glasso(data, is_scaled=False, L1=0.001):
+    """
+    Calculates the L1-regularized partial correlation matrix of a dataset. 
+
+    INPUT:
+        data : a dataset with dimension [nNodes x nDatapoints]
+        L1 : L1 (lambda1) hyperparameter value
+    OUTPUT:
+        glassoParCorr : regularized partial correlation coefficients (i.e., FC matrix)
+        prec : precision matrix, where entries are not yet transformed into partial correlations (used to compute loglikelihood)
+    """
+
+    data = np.transpose(data, (0, 2, 1))
+    if not is_scaled:
+        data_scaled = stats.zscore(data, axis=1)
+
+    outp = np.zeros((
+        data.shape[0],
+        data.shape[1],
+        data.shape[1]))
+    
+    for i in range(len(data_scaled)):
+        empCov = np.cov(data_scaled[i], rowvar=True)
+
+        glasso = glasso_problem(empCov, data.shape[1], 
+                                reg_params={'lambda1': L1}, 
+                                latent=False, do_scaling=False)
+        glasso.solve(verbose=False)
+        prec = np.squeeze(glasso.solution.precision_)
+
+        # Transform precision matrix into regularized partial correlation matrix
+        denom = np.atleast_2d(1. / np.sqrt(np.diag(prec)))
+        glassoParCorr = -prec * denom * denom.T
+        np.fill_diagonal(glassoParCorr, 0)
+
+        outp[i] = glassoParCorr
+
+    return outp
