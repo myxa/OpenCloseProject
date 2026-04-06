@@ -16,3 +16,6 @@ files
 *.npy
 masks/
 scripts/
+.venv311
+.pytest_cache
+openclose_denoising.egg-info

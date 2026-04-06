@@ -99,7 +99,8 @@ class legacyICC:
 
         """
         # group vecs by subject
-        sub_vec = [[self.data[ses][sub] for ses in range(self.n_ses)] for sub in range(self.n_sub)] # list(list*2)*nsub
+        sub_vec = [[self.data[ses][sub] for ses in range(self.n_ses)] 
+                   for sub in range(self.n_sub)] # list(list*2)*nsub
         
         return np.sum([(self._avg_matr - 
                         np.mean(sub_vec[sub], axis=0)) **2 for sub in range(self.n_sub)], axis=0) * self.n_ses

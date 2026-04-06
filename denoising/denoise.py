@@ -146,15 +146,15 @@ class Denoising:
         failed_subs = []
 
         for s in tqdm(sub):
-            try:
-                denoised.append(
-                    self._denoise_one_sub(sub=s, save_outputs=save_outputs, folder=folder))
-            except ValueError:
-                failed_subs.append(s)
-                continue
-            except IndexError:
-                failed_subs.append(s)
-                continue
+            #try:
+            denoised.append(
+                self._denoise_one_sub(sub=s, save_outputs=save_outputs, folder=folder))
+            #except ValueError:
+                #failed_subs.append(s)
+                #continue
+            #except IndexError:
+                #failed_subs.append(s)
+                #continue
 
         if failed_subs:
             print(f'failed to process: {failed_subs}')
@@ -183,7 +183,7 @@ class Denoising:
         #assert len(imgs) == self.dataset.runs, "All runs should be in one folder"
 
         confounds, _ = load_confounds(imgs, **self.strategy)
-        denoised_ts = []
+        denoised_ts  = []
 
         #runs = self.dataset.runs
         #sessions = 1 if self.dataset.sessions is None else self.dataset.sessions
@@ -237,9 +237,7 @@ class Denoising:
             
         # TODO добавить в название файла GSR и smoothing
 
-        name_gsr = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}_GSR.csv'
-        name_ =  f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
-        name = name_gsr if self.use_GSR else name_
+        name = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}{"_GSR" if self.use_GSR else ""}.csv'
 
         df = pd.DataFrame(outputs)
         df.to_csv(os.path.join(path_to_save, name), index=False)

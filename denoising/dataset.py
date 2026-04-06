@@ -60,7 +60,8 @@ class Dataset:
         """
         conf_paths = self.bids_layout.get(subject=sub,
                                           extension='tsv',
-                                          return_type='file')
+                                          return_type='file',
+                                          desc='confounds')
         #print(len(conf_paths))
         return [pd.read_csv(conf_paths[i], sep='\t') for i in range(len(conf_paths))]
 
@@ -84,7 +85,7 @@ class Dataset:
                                     datatype='func',
                                     task=self.task,
                                     desc='preproc',
-                                    space='MNI152NLin2009cAsym',
+                                    #space='MNI152NLin2009cAsym',
                                     extension='nii.gz',
                                     return_type='file')
     

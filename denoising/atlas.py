@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from typing import Optional, Union, Dict, Any, List
 import pandas as pd
 from nilearn.maskers import NiftiLabelsMasker
 from nilearn.datasets import fetch_atlas_aal, fetch_atlas_schaefer_2018
@@ -23,12 +24,14 @@ class Atlas:
         Returns time series extractor instance
     """
 
-    def __init__(self, atlas_name, mean_mask=None):
+    def __init__(self, atlas_name: str, mean_mask: Optional[str] = None) -> None:
         """
         Parameters
         ----------
         atlas_name: str
             One of ['HCPex', 'Schaefer200', 'AAL', 'Brainnetome']
+        mean_mask: str, optional
+            Path to mean mask image
         
         Raise
         -----
@@ -40,12 +43,13 @@ class Atlas:
             raise NotImplementedError(
                 'Available atlases: HCPex, Schaefer200, AAL, Brainnetome')
 
-        self.atlas_name = atlas_name
-        self.atlas_labels_path = Path('../atlas/')
-        self.mask = mean_mask
+        self.atlas_name: str = atlas_name
+        self.atlas_labels_path: Path = Path('../atlas/')
+        self.mask: Optional[str] = mean_mask
 
     @property
-    def atlas_path(self):
+    def atlas_path(self) -> str:
+        """Return path to atlas file."""
         if self.atlas_name in ['HCPex', 'Brainnetome']:
             return self._load_atlas()
 
@@ -58,13 +62,14 @@ class Atlas:
                 n_rois=200, data_dir=self.atlas_labels_path)
             return self.atlas['maps']
 
-    def _load_atlas(self):
+    def _load_atlas(self) -> str:
         """
         Loads atlas file from Yandex Disk
 
         Returns
         -------
-        path to loaded file
+        str
+            Path to loaded file
         """
         base_url = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?'
 
@@ -92,8 +97,13 @@ class Atlas:
         return os.path.abspath(fname)
 
     @property
-    def atlas_labels(self):
-
+    def atlas_labels(self) -> pd.DataFrame:
+        """Return atlas labels as pandas DataFrame."""
+        # Ensure atlas is loaded for AAL and Schaefer200
+        if self.atlas_name in ['AAL', 'Schaefer200'] and not hasattr(self, 'atlas'):
+            # Trigger atlas_path to load the atlas
+            _ = self.atlas_path
+        
         if self.atlas_name == 'HCPex':
             roi = pd.read_excel(os.path.join(self.atlas_labels_path, 'HCPex_sorted.xlsx'),
                                 index_col='HCPex_ID')
@@ -118,15 +128,16 @@ class Atlas:
         return roi_labels
 
     @property
-    def masker(self):
+    def masker(self) -> NiftiLabelsMasker:
+        """Return NiftiLabelsMasker instance for time series extraction."""
         mask = NiftiLabelsMasker(labels_img=self.atlas_path,
                                  labels=self.atlas_labels,
-                                 mask_img=self.mask,
+                                 #mask_img=self.mask,
                                  memory="nilearn_cache",
-                                 verbose=-1,
+                                 verbose=1,
                                  standardize=False, #'zscore_sample',
                                  detrend=True,
                                  resampling_target='data', #'labels'
-                                 n_jobs=-1 # fix 
+                                 n_jobs=-1 # fix
                                  )
         return mask
